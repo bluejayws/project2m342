@@ -1,0 +1,205 @@
+---
+title: "Conducting Initial Model Selection Process with LASSO"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+# Model Selection Code: (along with residual plots)
+* LASSO Code taken from Section 1 (Instructor Provided Code), adapted to our project results.
+
+Load Data
+```{r}
+#Load data set, and values
+rm(list=ls())
+data <- read.csv("jeju_data2model_pud_4WWU.csv",header <- TRUE)
+attach(data)
+
+# Use log-transformed y
+y <- usdyav
+y1 <- y+1
+logy1 <- log(y1)
+
+# Load variables
+x1 <- commercial_km2
+x2 <- culthistpl_km2
+x3 <- naturalmon_km2
+x4 <- road_moct_kms_100s
+x5 <- sandbeach_km2
+x6 <- seacliff_km2
+x7 <- viewpoint
+x8 <- airdist_kms_100s
+x9 <- land_km2_10s
+x10 <- forest_km2_10s
+x11 <- athletic_km2_10s
+x12 <- industrial_km2
+x13 <- trails_osm_kms_100s
+x14 <- nearroad_kms
+
+#Use transformed variables
+x1dummy = as.integer(x1 > 0)
+x2dummy = as.integer(x2 > 0)
+x3dummy = as.integer(x3 > 0)
+x4sqrt = sqrt(x4)
+x5dummy = as.integer(x5 > 0)
+x6dummy = as.integer(x6 > 0)
+x7dummy = as.integer(x7 > 0)
+x8 = x8 # no transformation was found to be needed
+x9dummy = as.integer(x9 > 0.2598)
+cubertx10 = x10^(1/3)
+x11dummy = as.integer(x11 > 0)
+x12dummy = as.integer(x12 > 0)
+x13dummy = as.integer(x13 > 0)
+x14dummy = as.integer(x14 > 0)
+
+```
+
+Set up the model 
+
+```{r}
+#Multiple linear regression model 
+model = lm(logy1 ~ x1dummy + x2dummy + x3dummy + x4sqrt + x5dummy + x6dummy + 
+             x7dummy + x8 + x9dummy + cubertx10 + x11dummy + x12dummy + x13dummy + x14dummy ) 
+summary(model)
+```
+Here, the histogram shows a bell-like curve, centered around 0. We have an indication of normal distributed residuals.
+Thus, we can get a hint of normality in our residuals of the initial version of the model (`model1`)
+
+```{r}
+resid <- model$residuals
+hist(resid, freq = FALSE, main = "Model Residuals",
+     xlab = "Residuals")
+```
+
+
+Here, we perform the LASSO model selection on the transformed variables. This is our `model2`
+
+Begin by preparing data for analysis.
+
+```{r}
+#install.packages("glmnet")
+library("glmnet")
+#Using lasso
+alpha = 1
+
+#Save all the explanatory variables in the data frame.
+xmat <- data.frame(x1dummy = x1dummy, x2dummy = x2dummy, x3dummy = x3dummy,  x4sqrt = x4sqrt,  x5dummy = x5dummy,
+                   x6dummy = x6dummy,  x7dummy = x7dummy,  x8 = x8, x9dummy = x9dummy,
+                   cubertx10 = cubertx10, x11dummy = x11dummy,  x12dummy =  x12dummy, x13dummy = x13dummy,  x14dummy = x14dummy)
+#Convert the data frame into a matrix.
+xmat <- as.matrix(xmat)
+```
+             
+Fit the model
+                   
+```{r}
+#Fit the model
+cvfit = cv.glmnet(xmat, logy1, alpha=alpha)
+```
+                   
+Here, we use the 1se criterion for coefficient selection
+```{r}
+#lambda based on the 1se criterion
+lambda_1se = cvfit$lambda.1se
+# Saved lambda for result replication, May 19th 10:35 PM
+lambda_1se = 0.03370218
+```
+
+Get Coefficients
+```{r}
+coef.lambda.1se <- coef(cvfit, s = lambda_1se)
+coef.lambda.1se
+```
+
+We drop x2, x9, x10, x11, x12, 14 for our model, indicated by LASSO, to construct our `model2`
+
+# This leads to the following least-squares equation: 
+```{r}
+model2 = lm(logy1 ~ x1dummy + x3dummy + x4sqrt + x5dummy + x6dummy + x7dummy + x8  + x13dummy )
+summary(model2)
+```
+
+# Residual Analysis
+
+
+Predicted values of y (y.hat) based on the x values in the data using lambda_1se.
+
+```{r}
+fit = glmnet(xmat, logy1, alpha = alpha, nlambda = 20)
+# head(fit)
+
+y.hat = predict(fit,newx=xmat,s=lambda_1se)
+# head(y.hat)
+```
+
+
+Residuals (run the regression diagnostics based on this)
+```{r}
+resid.lasso = y-y.hat
+```
+
+
+Histogram of Residuals. Here, we can see the residuals are skewed
+
+```{r}
+hist(resid.lasso)
+```
+
+
+The QQ-Plot also shows right-skewness.
+
+In the QQ-Plot, we see some hints of normality for a large part of the QQ-Plot, since we have that our data points follow the line. 
+
+At the end, the points start to deviate from the line. Perhaps this is indication of some outliers at the end (around theoretical quantiles = 3)
+```{r}
+qqnorm(resid.lasso, pch = 1, frame = FALSE)
+qqline(resid.lasso, col = "steelblue", lwd = 2)
+```
+
+
+Note how the residual plot, too has a skewness to it 
+```{r}
+plot(fitted(model2), resid.lasso)
+abline(0,0)
+```
+
+
+
+The Studentized Residuals plot shows that there are quite a few points above the line y=3
+
+Also note a lack of outliers below the line $y = -3$. These two observations can explain the right-skewness of the model, since there are quite a few above $y = 3$
+
+```{r}
+# y = b0 + b1x1 + b3x3 + b4x4 + b5x5 + b6x6 + b7x7 + b8x8 + b13x3 + error
+library(MASS)
+stud_resid = studres(model2)
+plot(x1dummy + x3dummy + x4sqrt + x5dummy + x6dummy + x7dummy + x8  + x13dummy, stud_resid,  ylab='Studentized Resid', xlab='x1dummy + x3dummy + x4sqrt + x5dummy + x6dummy + x7dummy + x8  + x13dummy') 
+abline(0,0)
+abline(3,0)
+abline(-3,0)
+```
+
+We can also note the right skewness in the residual density plot as well, which may be explained by the outliers seen in the studentized residuals
+
+```{r}
+plot(density(resid.lasso))
+```
+
+# Residuals vs Fitted (Cook's Distance)
+# 4th-plot : Residuals vs Fitted
+#   We can notice the lack of change in spread as leverage increases
+```{r}
+plot(model2, which = 4)
+plot(model2, which = 5)
+
+```
+
+
+
+
+
+
+
+
+
+

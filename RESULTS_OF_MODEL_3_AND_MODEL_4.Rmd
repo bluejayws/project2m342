@@ -1,0 +1,42 @@
+---
+title: 'Results of Model Selection with PLS methods '
+output:
+  pdf_document: default
+  html_notebook: default
+---
+Here, we present a table of all the results that encapsulates the observations mentioned in in `model3_analysis.Rmd` and `model4_elastic_analysis.Rmd`
+
+|Feature    |LASSO (lambda_lse)|Elastic-Net (lambda_min)|Elastic-Net (Lambda_1se)|Ridge Regression (lambda_min)|Ridge Regression (lambda_1se)|
+|-----------|------------------|------------------------|------------------------|-----------------------------|-----------------------------|
+|(Intercept)|0.36221224        |0.14730424              |0.36142292              |0.17603476                   |0.31561895                   |
+|x1dummy    |0.3529373         |0.32409708              |0.33424601              |0.3307206                    |0.26392401                   |
+|x2dummy    |.                 |0.02091111              |.                       |0.0282139                    |0.06088614                   |
+|x3dummy    |0.04298106        |0.091577                |0.03794754              |0.0911161                    |0.07347692                   |
+|x4sqrt     |0.27607536        |1.12873862              |0.25516549              |0.98688444                   |0.34401384                   |
+|x5dummy    |0.29749123        |0.40492152              |0.28278094              |0.39788762                   |0.29180028                   |
+|x6dummy    |0.48906747        |0.63897017              |0.45433187              |0.61854996                   |0.39961098                   |
+|x7dummy    |0.20177644        |0.25959129              |0.19178682              |0.2562277                    |0.19108889                   |
+|x8         |-1.12142004       |-1.35236122             |-1.02826743             |-1.31922036                  |-0.85544502                  |
+|x9dummy    |.                 |-0.06183292             |.                       |-0.06508365                  |-0.05642529                  |
+|cubertx10  |.                 |0.08958856              |.                       |0.08377387                   |-0.01532869                  |
+|x11dummy   |.                 |-0.02075722             |.                       |-0.01906367                  |0.00183603                   |
+|x12dummy   |.                 |-0.03143788             |.                       |-0.02446937                  |0.01383611                   |
+|x13dummy   |0.21020464        |0.22947424              |0.19969899              |0.22582804                   |0.16306033                   |
+|x14dummy   |.                 |0.20731902              |.                       |0.17390685                   |0.0260113                    |
+
+
+If a model excludes any variables, it's consistently those that correspond to:
+* Cultural and historical places (x2dummy)
+* Land (x9dummy)
+* Forest landcover type (cubertx10)
+* Golf courses and other sport facilities (x11dummy)
+* Industrial sites (x12dummy) 
+* Distance to nearest road (x14dummy)
+
+Thus, we will select a model that excludes the aforementioned variables. This will help make model interpretation more feasible, and we feel that  the excluded explanatory variables aren't as important in the context of park accessibility, or the data was sparse in the corresponding explanatory feature to begin with. 
+
+This leaves us with two choices, the 'LASSO (lambda_lse)' model or the 'Elastic-Net (Lambda_1se)'
+
+The only difference is the coefficients in the two models, but even then, they're roughly the same coefficients, with matching sign for the corresponding coefficients.
+
+Since Elastic-Net is supposed to provide a balance between picking the right amount of explanatory variables, and coefficient of correlated explanatory variable shrinkage, we'd pick this model due to the 'best of both worlds' characteristic it provides. However, as we mentioned before, since the terms used (and magnitude, sign of coefficients) closely match that of the LASSO method (with the more rigourous lambda_1se coefficients), then we choose the 'LASSO (lambda_lse)' model.

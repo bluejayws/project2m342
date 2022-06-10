@@ -1,0 +1,343 @@
+---
+title: "Variable Transformations"
+output:
+  pdf_document: default
+  html_notebook: default
+  word_document: default
+---
+
+# Variable Transformations
+Here, we have various variable transformations, with some documentation on the process.
+Begin by loading the dataset
+
+```{r}
+#Clear the data
+rm(list=ls())
+
+#The dataset of interest
+data <- read.csv("jeju_data2model_pud_4WWU.csv",header <- TRUE)
+attach(data)
+
+#Response variable (average annual PUD)
+y <- usdyav
+
+#Or, in some cases, it may make sense to try dummy variables.
+#This is useful especially when there are so many zeros.
+x1 <- commercial_km2
+x2 <- culthistpl_km2
+x3 <- naturalmon_km2
+x4 <- road_moct_kms_100s
+x5 <- sandbeach_km2
+x6 <- seacliff_km2
+x7 <- viewpoint
+x8 <- airdist_kms_100s
+x9 <- land_km2_10s
+x10 <- forest_km2_10s
+x11 <- athletic_km2_10s
+x12 <- industrial_km2
+x13 <- trails_osm_kms_100s
+x14 <- nearroad_kms
+
+```
+
+#R code for variable transformation:
+  * x1,x2,x3,x9 variables (Raina Hoy, hoyr2@wwu.edu)
+  * x4,x5,x6 variables (Che Ho)
+  * x7,x8,x10 variable (Antonio J. Gurrola-Beltran)
+  * x11,x12,x13,x14 (Samuel Borcherding)
+
+
+```{r}
+#x1
+x1 <- commercial_km2
+#we first take a look at the histogram of x1 
+hist(x1, breaks = 30, freq = FALSE, main = "Histogram of x1", 
+     xlab = "x1")
+#the dat looks heavily skewed to the left, 
+#therefore it would be a good idea to look at how many zeros are in the data 
+x1index <- which(x1 == 0)
+x1index
+x1s <- length(x1index)
+x1s
+#the data returns 768 zeros which is a lot for this data set
+#the best thing would be to perform the dummy variable function 
+x1dummy <- as.integer(x1 > 0)
+table(x1dummy)
+#take the histogram 
+hist(x1dummy, breaks = 30, freq = FALSE, main = "Histogram of x1dummy", 
+     xlab = "x1dummy")
+#once we take the dummy variable, there's nothing left to do 
+
+#x2
+x2 <- culthistpl_km2
+#let's look at the histogram of x2
+hist(x2, breaks = 30, freq = FALSE, main = "Histogram of x2", 
+     xlab = "x2")
+#suspicious amount of zeros, let's look at the exactly how many zeros  
+x2 <- culthistpl_km2
+x2index <- which(x2 == 0)
+x2index
+x2s <- length(x2index)
+x2s
+#the data returns 705 zeros, therefore dummy variable is best choice,
+#for instance, if i did the log function and took histogram 
+x2_log = log(x2)
+hist(x2_log, breaks = 30, freq = FALSE, main = "Histogram of x2_log", 
+     xlab = "x2_log")
+#it looks normal, however, when we take the log of x2, 
+log(x2)
+#we get a ton of -inf
+#bad
+#therefore, we leave it as a dummy variable
+x2dummy <- as.integer(x2 > 0)
+table(x2dummy)
+#take the histogram 
+hist(x2dummy, breaks = 30, freq = FALSE, main = "Histogram of x2dummy", 
+     xlab = "x2dummy")
+#the histogram of the dummy variable shows that there is a disproportionate amount of zeros as there are ones 
+
+#x3
+x3 <- naturalmon_km2
+#let's look at the histogram of x3 first, then try to use the log function 
+hist(x3, breaks = 30, freq = FALSE, main = "Histogram of x3", 
+     xlab = "x3")
+#we run into a similar situation as x2, where the log appeared to produce a nice normal distribution, however, it returned lots of -inf when the log(x3) was run 
+#there are a lot of zeros, let's check exactly how many 
+x3index <- which(x3 == 0)
+x3index
+x3s <- length(x3index)
+x3s
+#there are 632 zeros in the data, therefore we decide to dummy variable x3
+x3dummy <- as.integer(x3 > 0)
+table(x3dummy)
+#take the histogram 
+hist(x3dummy, breaks = 30, freq = FALSE, main = "Histogram of x3dummy", 
+     xlab = "x3dummy")
+#the histogram of the dummy variable shows that there is a disproportionate amount of zeros as there are ones 
+
+#X4
+#log(10) transf
+x4_log = log10(x4) 
+#cube root
+x4_cube_root = pracma::nthroot(x4, 2) 
+#cubic root
+x4_cubic_root = pracma::nthroot(x4, 3) 
+#comparing
+par(mfrow=c(1,3))
+hist(x4_log, breaks = 30, freq = FALSE, main = "Histogram of log10(x4)", 
+     xlab = "log10(x4)")
+hist(x4_cube_root, breaks = 30, freq = FALSE, main = "Histogram of x4_cube_root", 
+     xlab = "x4_cube_root")
+hist(x4_cubic_root, breaks = 30, freq = FALSE, main = "Histogram of x4_cubic_root", 
+     xlab = "x4_cubic_root")
+
+#X5
+#we first take a look at the histogram of x5 
+hist(x5, breaks = 30, freq = FALSE, main = "Histogram of x5", 
+     xlab = "x5")
+#we see that transformations are needed to try to normalize the data 
+#checking how many 0s we are dealing with is the best place to start 
+x5dummy <- as.integer(x5 > 0)
+table(x5dummy)
+#take the histogram 
+hist(x5dummy, breaks = 30, freq = FALSE, main = "Histogram of x5dummy", 
+     xlab = "x5dummy")
+#the histogram of the dummy variable shows that there is a disproportionate amount of zeros as there are ones 
+#we leave it as a dummy variable 
+
+#x6
+#checking original x6
+hist(x6, breaks = 30, freq = FALSE, main = "Histogram of x6", 
+     xlab = "x6")
+#trying log
+x6_log = log(x6)
+hist(x6_log, breaks = 30, freq = FALSE, main = "Histogram of log(x6)", 
+     xlab = "log(x6)")
+#seems not ideal, keep trying
+#checking how many 0s we are dealing with
+x6dummy <- as.integer(x6 > 0)
+table(x6dummy)
+hist(x6dummy, breaks = 30, freq = FALSE, main = "Histogram of x6dummy", 
+     xlab = "x6dummy")
+#seems there are a lot of zeros therefore we leave it as the dummy variable 
+
+#x7
+x7 <- viewpoint
+# Initial observations : Note the large amount of 0's, with some 1's, 2's, and an outlier of 4 and 6
+max(x7) # Max value
+hist(x7, breaks = 30, freq = FALSE, main= "Histogram of x7", xlab = "x7")
+# So a dummy variable seems like the best way to proceed here, and we see a (very) vaguely symmetric distribution
+x7_dummy = as.integer(x7 > 0)
+table(x7_dummy)
+hist(x7_dummy, breaks = 30, freq = FALSE, main = "Histogram of x7 Dummy")
+
+#x8
+x8 <- airdist_kms_100s
+# Initial observations show the distribution is close to normal distribution, but
+#   perhaps there's room for improvement
+# Histogram and QQPlot
+qqnorm(x8, pch = 1, frame = FALSE)
+qqline(x8, col = "steelblue", lwd = 2)
+hist(x8, breaks = 30, freq = FALSE, main= "Histogram of x8", xlab = "x8")
+# Shapiro-Wilkes
+install.packages("dplyr")
+library("dplyr")
+shapiro.test(x8)
+# W = 0.96806, p-value = 1.906e-12 | P-value indicates lack of statistical evidence for normal distribution
+# x8 has the most fleshed out data (no significant amount of 0's), so we can directly use transformations
+# We found that log(x+1), and log_2(x+1) gave really good normalizations. It appears
+#   that log_2(x+1) is more normal
+# Log(x8+1)
+log_x8 = log(x8+1)
+qqnorm(log_x8, pch = 1, frame = FALSE)
+qqline(log_x8, col = "steelblue", lwd = 2)
+hist(log_x8, breaks = 30, freq = FALSE, main= "Histogram of log_x8", xlab = "log(x8+1)")
+# log2(x8+1)
+log_2_x8 = log2(x8+1)
+qqnorm(log_2_x8, pch = 1, frame = FALSE)
+qqline(log_2_x8, col = "steelblue", lwd = 2)
+hist(log_2_x8, breaks = 30, freq = FALSE, main= "Histogram of log_2_x8", xlab = "log2(x8+1)")
+# Normalize for box-cox
+# install.packages('caret')
+library(caret)
+x8_norm = preProcess(as.data.frame(x8), method=c("range"))
+x8_normalized = predict(x8_norm, as.data.frame(x8))
+# Convert from Dataframe to list for lm(). Add 1 for BoxCox compatibility
+x8_norm_list = (x8_normalized$x8 + 1)
+library(MASS)
+model = lm(x8_norm_list~1)
+bc_x8 = boxcox(model)
+x8_opt_power = bc_x8$x[which.max(bc_x8$y)]
+x8_opt_power # -0.6262626 -> So round to -0.5 for a transformation of 1 / sqrt(x8)
+hist(1 / sqrt(x8_norm_list), breaks = 30, freq = FALSE, main = "Histogram of BoxCox transformation of x8_normalized", xlab = "1 / sqrt(x8_normalized)")
+#after all these transformations, it's decided that no transformation is necessary and the data was best originally 
+
+#x9
+x9 <- land_km2_10s
+#first check the variable
+hist(x9, breaks = 30, freq = FALSE, main = "Histogram of x9", 
+     xlab = "x9")
+#lets try a log function because the graph does not look normal
+x9_log = log(x9)
+hist(x9_log, breaks = 30, freq = FALSE, main = "Histogram of x9_log", 
+     xlab = "x9_log")
+#try the box cox to see what power would work best to fix the distribution 
+bc_info_x9 <- boxcox(x9~1, lambda = seq(-5, 5, 1/10))
+#try the cube and cubic functions 
+x9_cube_root = pracma::nthroot(x9, 2) # cube root
+x9_cubic_root = pracma::nthroot(x9, 3) # cubic root
+hist(x9_cube_root, breaks = 30, freq = FALSE, main = "Histogram of x9_cube_root", 
+     xlab = "x9_cube_root")
+hist(x9_cubic_root, breaks = 30, freq = FALSE, main = "Histogram of x9_cubic_root", 
+     xlab = "x9_cubic_root")
+#nothing good is getting returned therefore try squaring everything because boxcox says squaring the function would help
+x9sq = x9^2
+hist(x9sq)
+#squaring the function didn't help, try using the log function plus 1 to account for zeros in variable 
+min(x9)
+x9a = x9+1
+logy1 <- log(x9a)
+par(mfrow=c(1,1))
+hist(logy1, freq=FALSE, main="Histogram of log(x9+1)",
+     xlab = "log(x9+1) as Response")
+bc_info_x9a <- boxcox(x9a~1, lambda = seq(-5, 5, 1/10))
+#let's take a close look at the values in the x9 variable to see if there are any abnormalities 
+table(x9)
+#we see we have 587 variables with 0.2598 
+#try using the dummy variable 
+x9dummy <- as.integer(x9 > 0) 
+#weird issue where if i put x9>0, gives weird histogram because there's no actual zeros but most of the variables are less than 0.26
+table(x9dummy)
+hist(x9dummy, breaks = 30, freq = FALSE, main = "Histogram of x9dummy", 
+     xlab = "x9dummy")
+#try using the cutoff of 0.255 for x9
+x9dummy = as.integer(x9 > 0.255)
+hist(x9dummy, breaks = 30, freq = FALSE, main = "Histogram of x9dummy", 
+     xlab = "x9dummy")
+# it looks like there is nothing left to try and we stick with the dummy variable of x9
+
+#x10
+x10 <- forest_km2_10s
+# Trying various transformations resulted in having the cube-root, and square-root transformation
+#   giving the best results. We cannot seem to get a normal-looking histogram, but we get close
+#   with at least a symmetric looking histogram
+#Square Root Transformation
+hist(sqrt(x10), breaks = 30, freq = FALSE, main= "Histogram of sqrt(x10)", xlab = "sqrt(x10)")
+#Cube Root Transformation
+#install.packages("pracma")
+library(pracma)
+cube_rt_x10 = pracma::nthroot(x10, 3)
+hist(cube_rt_x10, breaks = 30, freq = FALSE, main = "Histogram of cube-root(x10)", xlab = "cube_root(x10)")
+# Let's see how a box-cox transformation fares for this
+# min(x10) # [1] 0 -> Add 1
+bc_x10 = boxcox( lm((x10)+1 ~ 1) )
+x10_opt_power = bc_x10$x[which.max(bc_x10$y)]
+x10_opt_power # Gives a lambda value of -2
+hist( 1 / (x10 ^ 2), breaks = 30, freq = FALSE, main = "Histogram of BoxCox transformation of 1 / x10^2", xlab = "1 / x10^2")
+# CONCLUSION: It appears the the cube-root gives the best transformation for x10
+
+#x11 
+current_explanatory = x11
+break_amount = 30 # set the amount of breaks to use for the histogram
+xc = x11
+# Variable without transformation
+hist(current_explanatory, breaks = break_amount, freq = FALSE, main= "Histogram of x11", xlab = "x11")
+xcindex <- which(xc == 0)
+xcindex
+xcs <- length(xcindex)
+xcs
+#there is a large amount of zeros in the data 
+#dummy variable would work best here 
+xcdummy <- as.integer(xc > 0)
+table(xcdummy)
+#take the histogram 
+hist(x1dummy, breaks = 30, freq = FALSE, main = "Histogram of x11dummy", 
+     xlab = "x11dummy")
+#once we take the dummy variable, there's nothing left to do
+
+#x12 
+current_explanatory = x12
+break_amount = 30 # set the amount of breaks to use for the histogram
+xc = x12
+# Variable without transformation
+hist(current_explanatory, breaks = break_amount, freq = FALSE, main= "Histogram of x12", xlab = "x12")
+#Natural log Transformation (add small constant to input beforehand)
+log_curr_expl = log(current_explanatory)
+hist(log_curr_expl, breaks = break_amount, freq = FALSE, main= "Histogram of log(x12)", xlab = "log(x12)")
+#looks normal but returns a lot of -inf when inputted back it
+#there is a large amount of zeros so the dummy variable works best here 
+xcdummy <- as.integer(xc > 0)
+table(xcdummy)
+#take the histogram 
+hist(xcdummy, breaks = 30, freq = FALSE, main = "Histogram of x12dummy", 
+     xlab = "x12dummy")
+#once we take the dummy variable, there's nothing left to do
+
+#x13
+current_explanatory = x13
+break_amount = 30 # set the amount of breaks to use for the histogram
+xc = x13
+# Variable without transformation
+hist(current_explanatory, breaks = break_amount, freq = FALSE, main= "Histogram of x13", xlab = "xc")
+#lot of zeros, therefore dummy variable works best here 
+xcdummy <- as.integer(xc > 0)
+table(xcdummy)
+#take the histogram 
+hist(xcdummy, breaks = 30, freq = FALSE, main = "Histogram of x13dummy", 
+     xlab = "x13dummy")
+#once we take the dummy variable, there's nothing left to do
+
+#14
+current_explanatory = x14
+break_amount = 30 # set the amount of breaks to use for the histogram
+xc = x14
+# Variable without transformation
+hist(current_explanatory, breaks = break_amount, freq = FALSE, main= "Histogram of x14", xlab = "x14")
+#let's do the dummy variable on this since there is a lot of zeros in the data 
+xcdummy <- as.integer(xc > 0)
+table(xcdummy)
+#take the histogram 
+hist(xcdummy, breaks = 30, freq = FALSE, main = "Histogram of x14dummy", 
+     xlab = "x14dummy")
+#once we take the dummy variable, there's nothing left to do
+```
